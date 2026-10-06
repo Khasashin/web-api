@@ -9,8 +9,10 @@ namespace WebApi.MinimalApi.Controllers;
 public class UsersController : Controller
 {
     // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
+    private readonly IUserRepository userRepository;
     public UsersController(IUserRepository userRepository)
     {
+        this.userRepository = userRepository;
     }
 
     [HttpGet("{userId}")]
