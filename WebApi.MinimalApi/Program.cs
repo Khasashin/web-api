@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Reflection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -24,6 +25,7 @@ builder.Services.AddAutoMapper(cfg =>
 builder.Services.AddControllers(options =>
     {
         options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
+        options.InputFormatters.Add(new XmlSerializerInputFormatter(options));
         options.OutputFormatters.Insert(0, new 
             NewtonsoftJsonOutputFormatter(new JsonSerializerSettings
             {
@@ -37,7 +39,12 @@ builder.Services.AddControllers(options =>
     {                                                                                                                                                         
         options.SuppressModelStateInvalidFilter = true;                                                                                                       
         options.SuppressMapClientErrors = true;                                                                                                               
-    });     
+    }) 
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+        options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
+    });;     
 
 var app = builder.Build();
 

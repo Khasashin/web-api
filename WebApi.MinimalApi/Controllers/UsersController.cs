@@ -30,8 +30,13 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] CreateUserDto user)
+    [Produces("application/json", "application/xml")]
+    public IActionResult CreateUser([FromBody] CreateUserDto? user)
     {
+        if (user is null)
+            return BadRequest();
+        if(!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
         if(!user.Login.All(char.IsLetterOrDigit))
         {
             ModelState.AddModelError(nameof(user.Login), $"Login must contain only letters and numbers.");
@@ -45,7 +50,7 @@ public class UsersController : Controller
         };
         
         var createdUser = userRepository.Insert(entity);
-        return new CreatedAtRouteResult("GetUserById", 
-            new { id = createdUser.Id }, entity);
+        return new CreatedAtRouteResult(nameof(GetUserById), 
+            new { userId = createdUser.Id }, createdUser.Id);
     }
 }
