@@ -7,7 +7,7 @@ builder.Services.AddControllers()
         options.SuppressModelStateInvalidFilter = true;
         options.SuppressMapClientErrors = true;
     });
-builder.Services.AddScoped<IUserRepository, InMemoryUserRepository>();
+builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 var app = builder.Build();
 
 app.MapControllers();
