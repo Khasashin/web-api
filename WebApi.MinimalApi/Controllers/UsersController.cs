@@ -53,4 +53,29 @@ public class UsersController : Controller
         return new CreatedAtRouteResult(nameof(GetUserById), 
             new { userId = createdUser.Id }, createdUser.Id);
     }
+
+    [HttpPut("{userId}")]
+    [Consumes("application/json")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateUserDto? user)
+    {
+        if (user == null || userId == Guid.Empty)
+            return BadRequest();
+
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+        var userEntity = mapper.Map(user, new UserEntity(userId));
+        userRepository.UpdateOrInsert(userEntity, out var isInserted);
+
+        if (isInserted)
+        {
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = userEntity.Id },
+                userEntity.Id);
+        }
+
+        return NoContent();
+    }
 }

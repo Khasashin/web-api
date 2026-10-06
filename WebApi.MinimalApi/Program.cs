@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.Reflection;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -20,12 +19,12 @@ builder.Services.AddAutoMapper(cfg =>
             opt 
                 => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"
                 ));
+    cfg.CreateMap<UpdateUserDto, UserEntity>();
 }, Array.Empty<Assembly>());
 
 builder.Services.AddControllers(options =>
     {
         options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
-        options.InputFormatters.Add(new XmlSerializerInputFormatter(options));
         options.OutputFormatters.Insert(0, new 
             NewtonsoftJsonOutputFormatter(new JsonSerializerSettings
             {
