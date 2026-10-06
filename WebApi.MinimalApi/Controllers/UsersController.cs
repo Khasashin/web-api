@@ -30,7 +30,7 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] NewUserDto user)
+    public IActionResult CreateUser([FromBody] CreateUserDto user)
     {
         if(!user.Login.All(char.IsLetterOrDigit))
         {
