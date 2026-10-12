@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace WebApi.MinimalApi.Controllers;
 
@@ -18,7 +19,7 @@ public class UsersController : Controller
         this.mapper = mapper;
     }
 
-    [HttpGet("{userId}", Name = nameof(GetUserById))]
+    [HttpGet("{userId:guid}", Name = nameof(GetUserById))]
     [Produces("application/json", "application/xml")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
@@ -29,7 +30,7 @@ public class UsersController : Controller
         return Ok(mapper.Map<UserDto>(user));
     }
 
-    [HttpPost]
+    [HttpPost(Name = nameof(CreateUser))]
     [Produces("application/json", "application/xml")]
     public IActionResult CreateUser([FromBody] CreateUserDto? user)
     {
@@ -54,7 +55,7 @@ public class UsersController : Controller
             new { userId = createdUser.Id }, createdUser.Id);
     }
 
-    [HttpPut("{userId}")]
+    [HttpPut("{userId:guid}", Name = nameof(UpdateUser))]
     [Consumes("application/json")]
     [Produces("application/json", "application/xml")]
     public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateUserDto? user)
@@ -76,6 +77,50 @@ public class UsersController : Controller
                 userEntity.Id);
         }
 
+        return NoContent();
+    }
+    
+    [HttpPatch("{userId:guid}", Name = nameof(PartiallyUpdateUser))]
+    [Consumes("application/json-patch+json")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto>? patchUser)
+    {
+        if (patchUser is null)
+            return BadRequest();
+        var emptyOp = patchUser.Operations.Where(op => string.IsNullOrEmpty(op.value.ToString()))
+            .ToList();
+        if (emptyOp.Count > 0)
+        {
+            foreach (var op in emptyOp)
+            {
+                ModelState.AddModelError(op.path, $"Patch operations must not be empty value from path {op.path}.");
+            }
+            return UnprocessableEntity(ModelState);
+        }
+        if(!patchUser.Operations.Where(op => op.path == "login")
+               .All(op =>  (op.value.ToString() ?? throw new InvalidOperationException()).All(char.IsLetterOrDigit)))
+        {
+            ModelState.AddModelError("login", $"Login must contain only letters and numbers.");
+            return UnprocessableEntity(ModelState);
+        }
+        if(!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        if (!TryValidateModel(patchUser))
+        {
+            ModelState.AddModelError(nameof(patchUser), $"UserDto can be contain only Login, FirstName and LastName");
+            return UnprocessableEntity(ModelState);
+        }
+
+        var user = userRepository.FindById(userId);
+        if (user is null)
+        {
+            return NotFound();
+        }
+        var updateUserDto = mapper.Map<UpdateUserDto>(user);
+        
+        patchUser.ApplyTo(updateUserDto, ModelState);
+        var updateUser = mapper.Map<UserEntity>(updateUserDto);
+        userRepository.Update(updateUser);
         return NoContent();
     }
 }

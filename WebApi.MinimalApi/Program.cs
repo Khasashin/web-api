@@ -20,6 +20,7 @@ builder.Services.AddAutoMapper(cfg =>
                 => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"
                 ));
     cfg.CreateMap<UpdateUserDto, UserEntity>();
+    cfg.CreateMap<UserEntity, UpdateUserDto>();
 }, Array.Empty<Assembly>());
 
 builder.Services.AddControllers(options =>
