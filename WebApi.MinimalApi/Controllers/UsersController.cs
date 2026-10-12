@@ -123,4 +123,20 @@ public class UsersController : Controller
         userRepository.Update(updateUser);
         return NoContent();
     }
+
+    [HttpDelete("{userId:guid}", Name = nameof(DeleteUser))]
+    [Consumes("application/json")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult DeleteUser([FromRoute] Guid userId)
+    {
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        var user = userRepository.FindById(userId);
+        if (user is null)
+        {
+            return NotFound();
+        };
+        userRepository.Delete(userId);
+        return NoContent();
+    }
 }
