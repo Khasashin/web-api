@@ -44,7 +44,7 @@ builder.Services.AddControllers(options =>
     {
         options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
         options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
-    });;     
+    });   
 
 var app = builder.Build();
 
